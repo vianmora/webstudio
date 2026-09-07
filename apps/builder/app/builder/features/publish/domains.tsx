@@ -182,9 +182,9 @@ const getStatusText = (props: {
         {text}
         <br />
         <br />
-        Destination changed to {props.buildMode} — this domain's DNS record
-        may still point at its previous destination. Update it if the site
-        doesn't load after publishing.
+        Destination changed to {props.buildMode} — this domain's DNS record may
+        still point at its previous destination. Update it if the site doesn't
+        load after publishing.
       </>
     );
   }

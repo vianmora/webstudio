@@ -195,9 +195,9 @@ const getStatusText = (props: {
         {text}
         <br />
         <br />
-        Destination changed to {props.buildMode} — this domain's DNS record may
-        still point at its previous destination. Update it if the site doesn't
-        load after publishing.
+        The publishing method has been changed for {props.buildMode}: the DNS
+        record for this domain may still point to its previous destination.
+        Please remember to update the CNAME.
       </>
     );
   }

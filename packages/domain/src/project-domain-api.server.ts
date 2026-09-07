@@ -225,7 +225,7 @@ export const publishProject = async (
      * Self-hosting build mode, forwarded to the publisher service.
      * When omitted, the deployment schema default applies.
      */
-    buildMode?: "ssg" | "ssr" | "cloudflare";
+    buildMode?: "ssg" | "ssr" | "cloudflare" | "ssh";
   },
   context: AppContext
 ) => {

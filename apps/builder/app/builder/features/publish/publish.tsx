@@ -476,6 +476,37 @@ const usePublishCountdown = (isPublishing: boolean) => {
   return countdown;
 };
 
+// Self-hosting publish targets, forwarded to the publisher service as `buildMode`.
+type BuildMode = "ssg" | "ssr" | "cloudflare" | "ssh";
+
+const buildModeOptions = ["ssr", "ssg", "cloudflare", "ssh"] as const;
+
+const getBuildModeLabel = (value: BuildMode) => {
+  switch (value) {
+    case "ssr":
+      return "SSR (dynamic data)";
+    case "ssg":
+      return "SSG (static site)";
+    case "cloudflare":
+      return "Cloudflare Pages";
+    case "ssh":
+      return "Remote server (SSH)";
+  }
+};
+
+const getBuildModeDescription = (value: BuildMode) => {
+  switch (value) {
+    case "ssr":
+      return "Dynamic data, rendered per request";
+    case "ssg":
+      return "Static files, no dynamic data";
+    case "cloudflare":
+      return "Deploy to Cloudflare edge";
+    case "ssh":
+      return "Static files, rsynced to your own server over SSH";
+  }
+};
+
 const Publish = ({
   project,
   timesLeft,
@@ -505,15 +536,11 @@ const Publish = ({
   const countdown = usePublishCountdown(isPublishing);
   const publisherHost = useStore($publisherHost);
   const buildModeStorageKey = `buildMode:${project.id}`;
-  const [buildMode, setBuildMode] = useState<"ssg" | "ssr" | "cloudflare">(
+  const [buildMode, setBuildMode] = useState<BuildMode>(
     () =>
-      (localStorage.getItem(buildModeStorageKey) as
-        | "ssg"
-        | "ssr"
-        | "cloudflare"
-        | null) ?? "ssr"
+      (localStorage.getItem(buildModeStorageKey) as BuildMode | null) ?? "ssr"
   );
-  const handleBuildModeChange = (value: "ssg" | "ssr" | "cloudflare") => {
+  const handleBuildModeChange = (value: BuildMode) => {
     localStorage.setItem(buildModeStorageKey, value);
     setBuildMode(value);
   };
@@ -734,25 +761,9 @@ const Publish = ({
         <Select
           fullWidth
           value={buildMode}
-          options={["ssr", "ssg", "cloudflare"] as const}
-          getLabel={(value: "ssr" | "ssg" | "cloudflare") => {
-            if (value === "ssr") {
-              return "SSR (dynamic data)";
-            }
-            if (value === "ssg") {
-              return "SSG (static site)";
-            }
-            return "Cloudflare Pages";
-          }}
-          getDescription={(value: "ssr" | "ssg" | "cloudflare") => {
-            if (value === "ssr") {
-              return "Dynamic data, rendered per request";
-            }
-            if (value === "ssg") {
-              return "Static files, no dynamic data";
-            }
-            return "Deploy to Cloudflare edge";
-          }}
+          options={buildModeOptions}
+          getLabel={getBuildModeLabel}
+          getDescription={getBuildModeDescription}
           getItemProps={(value) =>
             value === "cloudflare" && !capabilities?.cloudflare
               ? {
@@ -764,6 +775,13 @@ const Publish = ({
           }
           onChange={handleBuildModeChange}
         />
+      )}
+
+      {publisherHost && buildMode === "ssh" && (
+        <Text color="subtle" userSelect="text">
+          Configure the SSH target on the publisher first (POST
+          /targets/ssh-setup).
+        </Text>
       )}
 
       <Tooltip

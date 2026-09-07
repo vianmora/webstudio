@@ -1072,7 +1072,7 @@ export const apiRouter = router({
         domains: z.array(z.string()).optional(),
         message: z.string().optional(),
         idempotencyKey: z.string().optional(),
-        buildMode: z.enum(["ssg", "ssr", "cloudflare"]).optional(),
+        buildMode: z.enum(["ssg", "ssr", "cloudflare", "ssh"]).optional(),
       }),
       "edit",
       async ({ auth, ctx, input }) => {

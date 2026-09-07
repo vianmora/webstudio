@@ -79,8 +79,9 @@ export const domainRouter = router({
           projectId: z.string(),
           domains: z.array(z.string()),
           destination: z.literal("saas"),
-          // Self-hosting only: "ssg" (static, default) or "ssr" (Node subprocess)
-          buildMode: z.enum(["ssg", "ssr", "cloudflare"]).default("ssr"),
+          // Self-hosting only: "ssg" (static), "ssr" (Docker container, default),
+          // "cloudflare" (Cloudflare Pages), "ssh" (SSG rsynced to a remote server)
+          buildMode: z.enum(["ssg", "ssr", "cloudflare", "ssh"]).default("ssr"),
         }),
         z.object({
           projectId: z.string(),

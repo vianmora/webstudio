@@ -9,8 +9,9 @@ export const publishInput = z.object({
   githubSha: z.string().optional(),
 
   destination: z.enum(["saas", "static"]),
-  // Self-hosting build mode: "ssg" (static, default), "ssr" (Node subprocess), "cloudflare"
-  buildMode: z.enum(["ssg", "ssr", "cloudflare"]).default("ssg"),
+  // Self-hosting build mode: "ssg" (static, default), "ssr" (Docker container),
+  // "cloudflare" (Cloudflare Pages), "ssh" (SSG rsynced to a remote server)
+  buildMode: z.enum(["ssg", "ssr", "cloudflare", "ssh"]).default("ssg"),
   // preview support
   branchName: z.string(),
   // action log helper (not used for deployment, but for action logs readablity)

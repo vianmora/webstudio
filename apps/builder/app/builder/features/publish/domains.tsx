@@ -111,6 +111,19 @@ export const getPublishStatusAndText = ({
 };
 
 /**
+ * Mirrors webstudio-publisher's toCfProjectName (server.mjs) so the CNAME
+ * instructions shown here match the Cloudflare Pages project the publisher
+ * will actually create. CF Pages project names must be
+ * [a-z0-9][a-z0-9-]*[a-z0-9] and ≤ 58 chars.
+ */
+const toCfProjectName = (domain: string) =>
+  domain
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+    .slice(0, 58);
+
+/**
  * True when this domain was last successfully published with a different
  * buildMode than the one about to be used. Its DNS record was set up (or
  * last confirmed working) for the previous destination — a self-host target
@@ -380,6 +393,15 @@ const DomainItem = ({
   const cname = extractCname(projectDomain.domain);
   const isApexDomain = cname === "@";
 
+  // Cloudflare Pages serves from its own project, not this self-host
+  // instance — the CNAME target is the Pages project, not
+  // `customers.${publisherHost}`. See toCfProjectName above: this is what
+  // webstudio-publisher will actually create/deploy to.
+  const cnameTarget =
+    buildMode === "cloudflare"
+      ? `${toCfProjectName(project.domain)}.pages.dev`
+      : `${projectDomain.cname}.customers.${publisherHost}`;
+
   // Records for the Entri automatic DNS setup widget.
   // Entri only supports CNAME / ALIAS / TXT — A records are not included.
   const entriRecords = isApexDomain
@@ -395,7 +417,7 @@ const DomainItem = ({
         {
           type: "CNAME" as const,
           host: cname,
-          value: `${projectDomain.cname}.customers.${publisherHost}`,
+          value: cnameTarget,
           ttl: 300,
         },
         {

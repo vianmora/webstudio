@@ -136,7 +136,7 @@ OR REPLACE FUNCTION "latestBuildVirtual"("DashboardProject") RETURNS SETOF "late
 SELECT
   *
 FROM
-  "latestBuildVirtual"(ROW($1.id, $1.title, $1.domain, $1."userId", $1."isDeleted", $1."createdAt", $1."previewImageAssetId", $1."marketplaceApprovalStatus", $1.tags)::"Project");
+  "latestBuildVirtual"(ROW($1.id, $1.title, $1.domain, $1."userId", $1."isDeleted", $1."createdAt", $1."previewImageAssetId", $1."marketplaceApprovalStatus", $1.tags, $1."workspaceId")::"Project");
 
 $$ STABLE LANGUAGE sql;
 

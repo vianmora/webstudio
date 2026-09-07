@@ -110,9 +110,30 @@ export const getPublishStatusAndText = ({
   return { statusText, status };
 };
 
+/**
+ * True when this domain was last successfully published with a different
+ * buildMode than the one about to be used. Its DNS record was set up (or
+ * last confirmed working) for the previous destination — a self-host target
+ * for ssg/ssr, or a Cloudflare Pages project for cloudflare — and publishing
+ * now won't fix that: DNS is the user's to update, the publisher only
+ * changes the destination.
+ */
+const getDnsMayBeStale = (
+  projectDomain: Domain,
+  buildMode: "ssg" | "ssr" | "cloudflare"
+) => {
+  const lastBuildMode = projectDomain.latestBuildVirtual?.buildMode;
+  return (
+    projectDomain.latestBuildVirtual?.publishStatus === "PUBLISHED" &&
+    lastBuildMode != null &&
+    lastBuildMode !== buildMode
+  );
+};
+
 const getStatusText = (props: {
   projectDomain: Domain;
   isLoading: boolean;
+  buildMode: "ssg" | "ssr" | "cloudflare";
 }) => {
   const status = getStatus(props.projectDomain);
 
@@ -154,19 +175,38 @@ const getStatusText = (props: {
       break;
   }
 
+  const dnsMayBeStale = getDnsMayBeStale(props.projectDomain, props.buildMode);
+  if (dnsMayBeStale) {
+    text = (
+      <>
+        {text}
+        <br />
+        <br />
+        Destination changed to {props.buildMode} — this domain's DNS record
+        may still point at its previous destination. Update it if the site
+        doesn't load after publishing.
+      </>
+    );
+  }
+
   return {
     isVerifiedActive,
+    dnsMayBeStale,
     text: props.isLoading ? "Loading status..." : text,
   };
 };
 
-const StatusIcon = (props: { projectDomain: Domain; isLoading: boolean }) => {
-  const { isVerifiedActive, text } = getStatusText(props);
+const StatusIcon = (props: {
+  projectDomain: Domain;
+  isLoading: boolean;
+  buildMode: "ssg" | "ssr" | "cloudflare";
+}) => {
+  const { isVerifiedActive, dnsMayBeStale, text } = getStatusText(props);
 
   const Icon = isVerifiedActive ? CheckCircleIcon : AlertIcon;
 
   return (
-    <Tooltip content={text}>
+    <Tooltip content={text} variant="wrapped">
       <Flex
         align="center"
         justify="center"
@@ -176,9 +216,11 @@ const StatusIcon = (props: { projectDomain: Domain; isLoading: boolean }) => {
           height: theme.sizes.controlHeight,
           color: props.isLoading
             ? cssVar("--foreground-secondary")
-            : isVerifiedActive
-              ? cssVar("--foreground-positive")
-              : cssVar("--foreground-negative"),
+            : dnsMayBeStale
+              ? cssVar("--foreground-warning")
+              : isVerifiedActive
+                ? cssVar("--foreground-positive")
+                : cssVar("--foreground-negative"),
         }}
       >
         <Icon />
@@ -192,11 +234,13 @@ const DomainItem = ({
   projectDomain,
   project,
   refresh,
+  buildMode,
 }: {
   initiallyOpen: boolean;
   projectDomain: Domain;
   project: Project;
   refresh: () => Promise<void>;
+  buildMode: "ssg" | "ssr" | "cloudflare";
 }) => {
   const timeSinceLastUpdateMs =
     Date.now() - new Date(projectDomain.updatedAt).getTime();
@@ -324,6 +368,7 @@ const DomainItem = ({
   const { isVerifiedActive, text } = getStatusText({
     projectDomain,
     isLoading: false,
+    buildMode,
   });
 
   const publisherHost = useStore($publisherHost);
@@ -402,6 +447,7 @@ const DomainItem = ({
           <StatusIcon
             isLoading={isStatusLoading}
             projectDomain={projectDomain}
+            buildMode={buildMode}
           />
 
           <CopyToClipboard
@@ -610,6 +656,7 @@ type DomainsProps = {
   domains: Domain[];
   refresh: () => Promise<void>;
   project: Project;
+  buildMode: "ssg" | "ssr" | "cloudflare";
 };
 
 export const Domains = ({
@@ -617,6 +664,7 @@ export const Domains = ({
   domains,
   refresh,
   project,
+  buildMode,
 }: DomainsProps) => {
   return (
     <>
@@ -627,6 +675,7 @@ export const Domains = ({
           initiallyOpen={newDomains.has(projectDomain.domain)}
           refresh={refresh}
           project={project}
+          buildMode={buildMode}
         />
       ))}
     </>

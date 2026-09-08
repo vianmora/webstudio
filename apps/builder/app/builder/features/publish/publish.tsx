@@ -812,27 +812,29 @@ const Publish = ({
 
       {publisherHost && (
         <>
-          <Select<RenderMode>
+          <Select
             fullWidth
             value={renderMode}
             options={["ssr", "ssg"] as const}
-            getLabel={(value) =>
+            getLabel={(value: RenderMode) =>
               value === "ssr" ? "Dynamic (SSR)" : "Static (SSG)"
             }
-            getDescription={(value) =>
+            getDescription={(value: RenderMode) =>
               value === "ssr"
                 ? "Dynamic data, rendered per request"
                 : "Prerendered static files, no dynamic data"
             }
             onChange={onRenderModeChange}
           />
-          <Select<PublishHost>
+          <Select
             fullWidth
             value={host}
             options={publishHosts}
-            getLabel={(value) => publishHostLabels[value]}
-            getDescription={(value) => publishHostDescriptions[value]}
-            getItemProps={(value) => {
+            getLabel={(value: PublishHost) => publishHostLabels[value]}
+            getDescription={(value: PublishHost) =>
+              publishHostDescriptions[value]
+            }
+            getItemProps={(value: PublishHost) => {
               const reason = publishHostUnavailableReason(
                 capabilities,
                 renderMode,
